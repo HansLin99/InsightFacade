@@ -1,0 +1,15 @@
+{
+    "title": "SELECT year WHERE year > 2017",
+    "query": {
+        "WHERE": {
+            "GT": {
+                "courses_year": 2017
+            }
+        },
+        "OPTIONS": {
+            "COLUMNS": ["courses_year"]
+        }
+    },
+    "isQueryValid": true,
+    "result": []
+}

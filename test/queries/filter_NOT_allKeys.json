@@ -1,0 +1,88 @@
+{
+    "title": "SELECT dept, id, avg WHERE avg == 95 || avg > 90 && dept == 'adhe' ORDER BY avg",
+    "query": {
+        "WHERE": {
+            "AND": [
+                {
+                    "NOT": {
+                        "GT": {
+                            "courses_avg": 1
+                        }
+                    }
+                },
+                {
+                    "NOT": {
+                        "LT": {
+                            "courses_pass": 100
+                        }
+                    }
+                },
+                {
+                    "NOT": {
+                        "EQ": {
+                            "courses_fail": 200
+                        }
+                    }
+                },
+                {
+                    "NOT": {
+                        "GT": {
+                            "courses_audit": 100
+                        }
+                    }
+                },
+                {
+                    "NOT": {
+                        "GT": {
+                            "courses_year": 2020
+                        }
+                    }
+                },
+                {
+                    "NOT": {
+                        "IS": {
+                            "courses_dept": "MATH"
+                        }
+                    }
+                },
+                {
+                    "NOT": {
+                        "IS": {
+                            "courses_id": "1123"
+                        }
+                    }
+                },
+                {
+                    "NOT": {
+                        "IS": {
+                            "courses_instructor": "abc"
+                        }
+                    }
+                },
+                {
+                    "NOT": {
+                        "IS": {
+                            "courses_title": "abc"
+                        }
+                    }
+                },
+                {
+                    "NOT": {
+                        "IS": {
+                            "courses_uuid": "1111"
+                        }
+                    }
+                }
+            ]
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_dept",
+                "courses_id"
+            ],
+            "ORDER": "courses_dept"
+        }
+    },
+    "isQueryValid": true,
+    "result": []
+}

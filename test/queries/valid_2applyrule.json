@@ -1,0 +1,87 @@
+{
+    "title": "SELECT dept, avg WHERE avg > 97",
+    "query": {
+        "WHERE": {
+            "AND": [
+                {
+                    "IS": {
+                        "courses_dept": "cpsc"
+                    }
+                },
+                {
+                    "IS": {
+                        "courses_id": "*31*"
+                    }
+                }
+            ]
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_title",
+                "maxPass",
+                "overallAvg"
+            ],
+            "ORDER": {
+                "dir": "DOWN",
+                "keys": [
+                    "overallAvg"
+                ]
+            }
+        },
+        "TRANSFORMATIONS": {
+            "GROUP": [
+                "courses_title"
+            ],
+            "APPLY": [
+                {
+                    "maxPass": {
+                        "MAX": "courses_pass"
+                    }
+                },
+                {
+                    "overallAvg": {
+                        "AVG": "courses_avg"
+                    }
+                }
+            ]
+        }
+    },
+    "isQueryValid": true,
+    "result":[
+        {
+            "courses_title":"softwr eng proj",
+            "maxPass":75,
+            "overallAvg":84.52
+        },
+        {
+            "courses_title":"func & logic prg",
+            "maxPass":158,
+            "overallAvg":80.71
+        },
+        {
+            "courses_title":"intr sftwr eng",
+            "maxPass":347,
+            "overallAvg":78.25
+        },
+        {
+            "courses_title":"programmng langs",
+            "maxPass":105,
+            "overallAvg":77.25
+        },
+        {
+            "courses_title":"comp graphics",
+            "maxPass":139,
+            "overallAvg":76.78
+        },
+        {
+            "courses_title":"comp hard&os",
+            "maxPass":326,
+            "overallAvg":73.98
+        },
+        {
+            "courses_title":"internet comp",
+            "maxPass":236,
+            "overallAvg":72.57
+        }
+    ]
+}

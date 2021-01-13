@@ -1,0 +1,18 @@
+{
+    "title": "SELECT dept, avg WHERE avg > 80",
+    "query": {
+        "WHERE": {
+            "GT": {
+                "courses_avg": 80
+            }
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "mini_avg"
+            ],
+            "ORDER": []
+        }
+    },
+    "isQueryValid": false,
+    "result": "InsightError"
+}

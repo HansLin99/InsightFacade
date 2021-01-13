@@ -1,0 +1,58 @@
+{
+    "title": "SELECT dept, avg WHERE avg > 97",
+    "query": {
+        "WHERE": {
+            "AND": [
+                {
+                    "IS": {
+                        "rooms_furniture": "*Tables*"
+                    }
+                },
+                {
+                    "GT": {
+                        "rooms_seats": 300
+                    }
+                }
+            ]
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "rooms_name",
+                "maxSeats"
+            ],
+            "ORDER": "rooms_name"
+        },
+        "TRANSFORMATIONS": {
+            "GROUP": [
+                "rooms_name"
+            ],
+            "APPLY": [
+                {
+                    "maxSeats": {
+                        "MAX": "rooms_seats"
+                    }
+                }
+            ]
+        }
+    },
+    "isQueryValid": true,
+    "result":[
+        {
+            "rooms_name":"HEBB_100",
+            "maxSeats":375
+        },
+        {
+            "rooms_name":"LSC_1001",
+            "maxSeats":350
+        },
+        {
+            "rooms_name":"LSC_1002",
+            "maxSeats":350
+        },
+        {
+            "rooms_name":"OSBO_A",
+            "maxSeats":442
+        }
+    ]
+}
+

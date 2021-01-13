@@ -1,0 +1,15 @@
+{
+    "title": "SELECT instructor WHERE ",
+    "query": {
+        "WHERE": {
+
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_instructor"
+            ]
+        }
+    },
+    "isQueryValid": false,
+    "result": "ResultTooLargeError"
+}

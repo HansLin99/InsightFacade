@@ -1,0 +1,32 @@
+{
+    "title": "SELECT dept, avg",
+    "query": {
+        "WHERE": {},
+        "OPTIONS": {
+            "COLUMNS": [
+                "1 3 4_dept",
+                "1 3 4_avg"
+            ],
+            "ORDER": "1 3 4_avg"
+        }
+    },
+    "isQueryValid": true,
+    "result": [
+        {
+            "1 3 4_dept": "span",
+            "1 3 4_avg": 76
+        },
+        {
+            "1 3 4_dept": "cnrs",
+            "1 3 4_avg": 82
+        },
+        {
+            "1 3 4_dept": "grsj",
+            "1 3 4_avg": 83
+        },
+        {
+            "1 3 4_dept": "germ",
+            "1 3 4_avg": 88
+        }
+    ]
+}

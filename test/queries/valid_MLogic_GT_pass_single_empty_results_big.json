@@ -1,0 +1,17 @@
+{
+    "title": "SELECT pass WHERE pass > 3000",
+    "query": {
+        "WHERE": {
+            "GT": {
+                "courses_pass": 3000
+            }
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_pass"
+            ]
+        }
+    },
+    "isQueryValid": true,
+    "result": []
+}

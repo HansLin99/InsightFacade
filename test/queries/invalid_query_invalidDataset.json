@@ -1,0 +1,15 @@
+{
+    "title": "SELECT dept, avg",
+    "query": {
+        "WHERE": {},
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses__dept",
+                "courses__dept"
+            ],
+            "ORDER": "courses__dept"
+        }
+    },
+    "isQueryValid": false,
+    "result": "InsightError"
+}

@@ -1,0 +1,28 @@
+{
+    "title": "SELECT dept, avg WHERE avg < 97 AND avg > 95",
+    "query": {
+        "WHERE": {
+            "AND": [
+                {
+                    "LT": {
+                        "1_3_avg": 97
+                    }
+                },
+                {
+                    "GT": {
+                        "1_3_avg": 95
+                    }
+                }
+            ]
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "1_3_dept",
+                "1_3_avg"
+            ],
+            "ORDER": "1_3_avg"
+        }
+    },
+    "isQueryValid": false,
+    "result": "InsightError"
+}

@@ -1,0 +1,46 @@
+{
+    "title": "SELECT dept, avg WHERE avg > 97",
+    "query": {
+        "WHERE": {
+            "AND": [{
+                "IS": {
+                    "rooms_furniture": "*Tables*"
+                }
+            }, {
+                "GT": {
+                    "rooms_seats": 300
+                }
+            }]
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "rooms_address",
+                "maxSeats"
+            ],
+            "ORDER": "rooms_address"
+        },
+        "TRANSFORMATIONS": {
+            "GROUP": ["rooms_address"],
+            "APPLY": [{
+                "maxSeats": {
+                    "MAX": "rooms_seats"
+                }
+            }]
+        }
+    },
+    "isQueryValid": true,
+    "result":[
+        {
+            "rooms_address":"2045 East Mall",
+            "maxSeats":375
+        },
+        {
+            "rooms_address":"2350 Health Sciences Mall",
+            "maxSeats":350
+        },
+        {
+            "rooms_address":"6108 Thunderbird Boulevard",
+            "maxSeats":442
+        }
+    ]
+}

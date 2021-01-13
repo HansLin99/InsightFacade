@@ -1,0 +1,15 @@
+{
+    "title": "SELECT title WHERE ",
+    "query": {
+        "WHERE": {
+
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_title"
+            ]
+        }
+    },
+    "isQueryValid": false,
+    "result": "ResultTooLargeError"
+}

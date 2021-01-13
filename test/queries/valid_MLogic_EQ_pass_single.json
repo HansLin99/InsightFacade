@@ -1,0 +1,106 @@
+{
+    "title": "SELECT pass WHERE pass == 201",
+    "query": {
+        "WHERE": {
+            "EQ": {
+                "courses_pass": 201
+            }
+        },
+        "OPTIONS": {
+            "COLUMNS": ["courses_pass"]
+        }
+    },
+    "isQueryValid": true,
+    "result": [
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        },
+        {
+            "courses_pass": 201
+        }
+    ]
+}

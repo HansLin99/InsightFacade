@@ -1,0 +1,20 @@
+{
+    "title": "SELECT avg WHERE avg > 97 AND audit == 3",
+    "query": {
+        "WHERE":
+        {
+            "AND": { "GT": {
+                "courses_avg": 97
+            },
+                "EQ": {
+                    "courses_audit": 3
+                }
+            }
+        },
+        "OPTIONS": {
+            "COLUMNS": "courses_avg"
+        }
+    },
+    "isQueryValid": false,
+    "result": "InsightError"
+}

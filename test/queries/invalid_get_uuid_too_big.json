@@ -1,0 +1,15 @@
+{
+    "title": "SELECT uuid WHERE ",
+    "query": {
+        "WHERE": {
+
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_uuid"
+            ]
+        }
+    },
+    "isQueryValid": false,
+    "result": "ResultTooLargeError"
+}

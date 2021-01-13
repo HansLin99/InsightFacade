@@ -1,0 +1,25 @@
+{
+    "title": "SELECT dept, avg WHERE instructor==1",
+    "query": {
+        "WHERE": {
+            "IS": {
+                "courses_avg": {
+                    "COLUMNS": [
+                        "courses_dept",
+                        "courses_avg"
+                    ],
+                    "ORDER": "courses_avg"
+                }
+            }
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_dept",
+                "courses_avg"
+            ],
+            "ORDER": "courses_avg"
+        }
+    },
+    "isQueryValid": false,
+    "result": "InsightError"
+}

@@ -1,0 +1,15 @@
+{
+    "title": "SELECT avg WHERE avg > 97",
+    "query": {
+        "WHERE":{
+            "GT": {
+                "courses_avg": 97
+            }
+        },
+        "OPTIONS": {
+            "COLUMNS": "avg"
+        }
+    },
+    "isQueryValid": false,
+    "result": "InsightError"
+}

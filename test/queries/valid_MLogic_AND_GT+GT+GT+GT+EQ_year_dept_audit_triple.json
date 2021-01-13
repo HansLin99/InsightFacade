@@ -1,0 +1,64 @@
+{
+    "title": "SELECT dept, year, audit, pass, fail, avg WHERE year == 2015 AND audit == 0 AND pass > 1 AND fail < 1 AND avg > 98 ORDER BY avg",
+    "query": {
+        "WHERE": {
+            "AND": [
+                {
+                    "EQ": {
+                        "courses_year": 2015
+                    }
+                },
+                {
+                    "GT": {
+                        "courses_avg": 98
+                    }
+                },
+                {
+                    "GT": {
+                        "courses_pass": 1
+                    }
+                },
+                {
+                    "EQ": {
+                        "courses_audit": 0
+                    }
+                },
+                {
+                    "LT":{
+                        "courses_fail": 1
+                    }
+                }
+            ]
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_dept",
+                "courses_year",
+                "courses_audit",
+                "courses_avg",
+                "courses_pass",
+                "courses_fail"
+            ],
+            "ORDER": "courses_avg"
+        }
+    },
+    "isQueryValid": true,
+    "result": [
+        {
+            "courses_dept": "nurs",
+            "courses_year": 2015,
+            "courses_audit": 0,
+            "courses_avg": 98.21,
+            "courses_pass": 14,
+            "courses_fail": 0
+        },
+        {
+            "courses_dept": "spph",
+            "courses_year": 2015,
+            "courses_audit": 0,
+            "courses_avg": 98.98,
+            "courses_pass": 82,
+            "courses_fail": 0
+        }
+    ]
+}

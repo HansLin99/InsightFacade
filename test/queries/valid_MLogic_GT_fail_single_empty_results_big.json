@@ -1,0 +1,15 @@
+{
+    "title": "SELECT fail WHERE fail > 300",
+    "query": {
+        "WHERE": {
+            "GT": {
+                "courses_fail": 300
+            }
+        },
+        "OPTIONS": {
+            "COLUMNS": ["courses_fail"]
+        }
+    },
+    "isQueryValid": true,
+    "result": []
+}

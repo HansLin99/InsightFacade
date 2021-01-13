@@ -1,0 +1,20 @@
+{
+    "title": "SELECT dept, avg",
+    "query": {
+        "WHERE": {},
+        "OPTIONS": {
+            "COLUMNS": [
+                "mini_dept",
+                "mini_avg",
+                {
+                    "GT": {
+                        "courses_avg": 97
+                    }
+                }
+            ],
+            "ORDER": "mini_avg"
+        }
+    },
+    "isQueryValid": false,
+    "result": "InsightError"
+}

@@ -1,0 +1,52 @@
+{
+    "title": "SELECT dept, id, avg WHERE avg == 95 || avg > 90 && dept == 'adhe' ORDER BY avg",
+    "query": {
+        "WHERE": {
+            "OR": [
+                {
+                    "EQ": {
+                        "courses_avg": 98
+                    }
+                },
+                {
+                    "EQ": {
+                        "courses_pass": 10000
+                    }
+                },
+                {
+                    "EQ": {
+                        "courses_fail": 10000
+                    }
+                },
+                {
+                    "EQ": {
+                        "courses_audit": 10000
+                    }
+                },
+                {
+                    "EQ": {
+                        "courses_year": 10000
+                    }
+                }
+            ]
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_dept",
+                "courses_id"
+            ],
+            "ORDER": "courses_dept"
+        }
+    },
+    "isQueryValid": true,
+    "result": [
+        {
+            "courses_dept":"crwr",
+            "courses_id":"599"
+        },
+        {
+            "courses_dept":"crwr",
+            "courses_id":"599"
+        }
+    ]
+}

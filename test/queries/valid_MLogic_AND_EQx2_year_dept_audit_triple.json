@@ -1,0 +1,114 @@
+{
+    "title": "SELECT dept, year, audit WHERE year == 2015 AND audit == 3",
+    "query": {
+        "WHERE": {
+            "AND": [
+                {
+                    "EQ": {
+                    "courses_year": 2015
+                }
+                },
+                {
+                    "EQ": {
+                        "courses_audit": 3
+                    }
+                }
+            ]
+        },
+        "OPTIONS": {
+            "COLUMNS": [
+                "courses_dept",
+                "courses_year",
+                "courses_audit"
+            ]
+        }
+    },
+    "isQueryValid": true,
+    "result": [
+        {
+            "courses_dept": "arth",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "asia",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "chbe",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "chem",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "chem",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "chem",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "epse",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "frst",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "germ",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "hist",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "libr",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "mech",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "mtrl",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "plan",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "russ",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "spph",
+            "courses_year": 2015,
+            "courses_audit": 3
+        },
+        {
+            "courses_dept": "stat",
+            "courses_year": 2015,
+            "courses_audit": 3
+        }
+    ]
+}
