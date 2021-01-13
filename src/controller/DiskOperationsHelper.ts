@@ -1,11 +1,11 @@
 import InsightFacade from "./InsightFacade";
 import Util from "../Util";
 import { InsightDatasetKind } from "./IInsightFacade";
+import * as fs from "fs-extra";
 
 export default class DiskOperationsHelper {
     // This helper methods loads the dataset from disks
     public static loadDatasetFromDisk(obj: InsightFacade) {
-        let fs = require("fs");
         let dirPath = "./data/";
         let ids: Buffer;
         let datasets: string[];
@@ -17,14 +17,13 @@ export default class DiskOperationsHelper {
         datasets.splice(datasets.indexOf("ids.json"), 1);
         ids = fs.readFileSync(dirPath + "ids.json");
         obj.ids = JSON.parse(ids.toString());
-        this.loadHelper(obj, datasets, dirPath, fs);
+        this.loadHelper(obj, datasets, dirPath);
     }
 
     private static loadHelper(
         obj: InsightFacade,
         datasets: string[],
         dirPath: string,
-        fs: any,
     ) {
         for (const key in datasets) {
             if (obj.ids[datasets[key]].kind === InsightDatasetKind.Courses) {
@@ -88,26 +87,35 @@ export default class DiskOperationsHelper {
     }
 
     // This helper methods write current ids and contents to local disk
-    public static saveDatasetToDisk(obj: InsightFacade): any {
-        let fs = require("fs");
+    public static saveDatasetToDisk(obj: InsightFacade): Promise<any> {
         let promises: Array<Promise<any>> = [];
-        promises.push(this.writeIDS(fs, obj));
-        let contentPromises: Array<Promise<any>> = this.writeContents(fs, obj);
-        for (let value of contentPromises) {
-            promises.push(value);
+        let cacheDir = "./data/";
+        if (!fs.existsSync(cacheDir)) {
+            fs.mkdirSync(cacheDir);
         }
-        return Promise.all(promises);
+        if (Object.keys(obj.ids).length > 0) {
+            promises.push(this.writeIDS(obj));
+            let contentPromises: Array<Promise<any>> = this.writeContents(obj);
+            for (let value of contentPromises) {
+                promises.push(value);
+            }
+            return Promise.all(promises);
+        } else {
+            return Promise.resolve(1);
+        }
+
+
     }
 
-    private static writeIDS(fs: any, obj: InsightFacade): Promise<any> {
+    private static writeIDS(obj: InsightFacade): Promise<any> {
         return fs.promises.writeFile(
             "./data/ids.json",
             JSON.stringify(obj.ids, null, "\t"),
+            "utf8",
         );
     }
 
     private static writeContents(
-        fs: any,
         obj: InsightFacade,
     ): Array<Promise<any>> {
         let keys = Object.keys(obj.ids);
@@ -131,7 +139,7 @@ export default class DiskOperationsHelper {
                                         null,
                                         "\t",
                                     ),
-                                    { recursive: true },
+                                    "utf8",
                                 ),
                             );
                         }
@@ -144,7 +152,7 @@ export default class DiskOperationsHelper {
                                     null,
                                     "\t",
                                 ),
-                                { recursive: true },
+                                "utf8",
                             ),
                         );
                     }
@@ -156,30 +164,7 @@ export default class DiskOperationsHelper {
         return tempPromisesContent;
     }
 
-    private static executePromise(
-        promise: Promise<any>,
-        obj: InsightFacade,
-        id: string,
-    ) {
-        promise
-            .then((result: string[] | Buffer[]) => {
-                for (const value of result) {
-                    if (typeof value === "string") {
-                        obj.contentParsed[id].push(JSON.parse(value));
-                    } else {
-                        obj.contentParsed[id].push(
-                            JSON.parse(value.toString()),
-                        );
-                    }
-                }
-            })
-            .catch((e) => {
-                throw e;
-            });
-    }
-
     public static checkIfDataInDisk(obj: InsightFacade, id: string): boolean {
-        let fs = require("fs");
         let dir = "./data/ids.json";
         let fileRaw;
         try {
@@ -187,8 +172,19 @@ export default class DiskOperationsHelper {
         } catch (e) {
             return false;
         }
-
         let file = JSON.parse(fileRaw.toString());
-        return file.hasOwnProperty(id);
+        if (typeof file === "undefined") {
+            return false;
+        } else {
+            return file.hasOwnProperty(id);
+        }
+    }
+
+    public static cleanCache() {
+        let cacheDir = "./data/";
+        if (fs.existsSync(cacheDir)) {
+            fs.removeSync(cacheDir);
+        }
+        fs.mkdirSync(cacheDir);
     }
 }

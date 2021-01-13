@@ -68,8 +68,19 @@ class InsightFacade {
                 return reject(new IInsightFacade_1.InsightError("Something wrong with this program. Content not successfully removed. " +
                     "Please debug."));
             }
-            DiskOperationsHelper_1.default.saveDatasetToDisk(this);
-            return resolve(id);
+            DiskOperationsHelper_1.default.cleanCache();
+            DiskOperationsHelper_1.default.saveDatasetToDisk(this).then((results) => {
+                if (results === 1) {
+                    Util_1.default.trace("The dataset memory is empty. No disk write perfroms.");
+                    return resolve(id);
+                }
+                else {
+                    Util_1.default.trace("The dataset requested has been removed. New copy has been written into disk.");
+                    return resolve(id);
+                }
+            }).catch((e) => {
+                return reject("Error when saving to disk" + e.message);
+            });
         });
     }
     performQuery(query) {

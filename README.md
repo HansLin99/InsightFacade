@@ -34,4 +34,3 @@ In the project folder:
 ## Running and testing from an IDE
 
 WebStorm should be automatically configured the first time you open the project (WebStorm is a free download through their students program)
-# InsightFacade

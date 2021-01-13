@@ -5,6 +5,8 @@
 import fs = require("fs");
 import restify = require("restify");
 import Log from "../Util";
+import InsightFacade from "../controller/InsightFacade";
+import {InsightError, NotFoundError} from "../controller/IInsightFacade";
 
 /**
  * This configures the REST endpoints for the server.
@@ -13,6 +15,7 @@ export default class Server {
 
     private port: number;
     private rest: restify.Server;
+    private static data: InsightFacade = new InsightFacade();
 
     constructor(port: number) {
         Log.info("Server::<init>( " + port + " )");
@@ -65,9 +68,13 @@ export default class Server {
 
                 // NOTE: your endpoints should go here
 
+                that.rest.put("/dataset/:id/:kind", Server.putDataset);
+                that.rest.del("/dataset/:id", Server.deleteDataset);
+                that.rest.post("/query", Server.postQuery);
+                that.rest.get("/datasets", Server.getDatasets);
+
                 // This must be the last endpoint!
                 that.rest.get("/.*", Server.getStatic);
-
                 that.rest.listen(that.port, function () {
                     Log.info("Server::start() - restify listening: " + that.rest.url);
                     fulfill(true);
@@ -128,6 +135,76 @@ export default class Server {
             res.end();
             return next();
         });
+    }
+
+    private static putDataset(req: restify.Request, res: restify.Response, next: restify.Next) {
+        try {
+            let id = req.params.id;
+            let kind = req.params.kind;
+            let content = req.body.toString("base64");
+
+            return Server.data.addDataset(id, content, kind).then((results: any) => {
+                res.json(200, { result: results });
+                return next();
+            }).catch((e: any) => {
+                res.json(400, { error: e.message });
+                return next();
+            });
+        } catch (e) {
+            res.json(400, { error: e.message });
+            return next();
+        }
+    }
+
+    private static deleteDataset(req: restify.Request, res: restify.Response, next: restify.Next) {
+        try {
+            let id = req.params.id;
+            return Server.data.removeDataset(id).then((results: any) => {
+                res.json(200, { result: results });
+                return next();
+            }).catch((e: any) => {
+                if (e instanceof InsightError) {
+                    res.json(400, { error: e.message });
+                } else if (e instanceof NotFoundError) {
+                    res.json(404, { error: e.message });
+                }
+                return next();
+            });
+        } catch (e) {
+            res.json(400, { error: e.message });
+            return next();
+        }
+    }
+
+    private static postQuery(req: restify.Request, res: restify.Response, next: restify.Next) {
+        try {
+            let query: any = req.body;
+            if (typeof query === "string") {
+                query = JSON.parse(query);
+            }
+            return Server.data.performQuery(query).then((results: any) => {
+                res.json(200, { result: results });
+                return next();
+            }).catch((e: any) => {
+                res.json(400, { result: e.message });
+                return next();
+            });
+        } catch (e) {
+            res.json(400, { error: e.message });
+            return next();
+        }
+    }
+
+    private static getDatasets(req: restify.Request, res: restify.Response, next: restify.Next) {
+        try {
+            return Server.data.listDatasets().then((results: any) => {
+                res.json(200, { result: results });
+                return next();
+            });
+        } catch (e) {
+            res.json(400, { error: e.message });
+            return next();
+        }
     }
 
 }

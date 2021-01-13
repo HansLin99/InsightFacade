@@ -2,9 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Util_1 = require("../Util");
 const IInsightFacade_1 = require("./IInsightFacade");
+const fs = require("fs-extra");
 class DiskOperationsHelper {
     static loadDatasetFromDisk(obj) {
-        let fs = require("fs");
         let dirPath = "./data/";
         let ids;
         let datasets;
@@ -17,9 +17,9 @@ class DiskOperationsHelper {
         datasets.splice(datasets.indexOf("ids.json"), 1);
         ids = fs.readFileSync(dirPath + "ids.json");
         obj.ids = JSON.parse(ids.toString());
-        this.loadHelper(obj, datasets, dirPath, fs);
+        this.loadHelper(obj, datasets, dirPath);
     }
-    static loadHelper(obj, datasets, dirPath, fs) {
+    static loadHelper(obj, datasets, dirPath) {
         for (const key in datasets) {
             if (obj.ids[datasets[key]].kind === IInsightFacade_1.InsightDatasetKind.Courses) {
                 let filePath = dirPath + datasets[key];
@@ -74,19 +74,27 @@ class DiskOperationsHelper {
         }
     }
     static saveDatasetToDisk(obj) {
-        let fs = require("fs");
         let promises = [];
-        promises.push(this.writeIDS(fs, obj));
-        let contentPromises = this.writeContents(fs, obj);
-        for (let value of contentPromises) {
-            promises.push(value);
+        let cacheDir = "./data/";
+        if (!fs.existsSync(cacheDir)) {
+            fs.mkdirSync(cacheDir);
         }
-        return Promise.all(promises);
+        if (Object.keys(obj.ids).length > 0) {
+            promises.push(this.writeIDS(obj));
+            let contentPromises = this.writeContents(obj);
+            for (let value of contentPromises) {
+                promises.push(value);
+            }
+            return Promise.all(promises);
+        }
+        else {
+            return Promise.resolve(1);
+        }
     }
-    static writeIDS(fs, obj) {
-        return fs.promises.writeFile("./data/ids.json", JSON.stringify(obj.ids, null, "\t"));
+    static writeIDS(obj) {
+        return fs.promises.writeFile("./data/ids.json", JSON.stringify(obj.ids, null, "\t"), "utf8");
     }
-    static writeContents(fs, obj) {
+    static writeContents(obj) {
         let keys = Object.keys(obj.ids);
         let tempPromisesDir = [];
         for (const key of keys) {
@@ -98,11 +106,11 @@ class DiskOperationsHelper {
             for (const key of keys) {
                 if (obj.ids[key].kind === IInsightFacade_1.InsightDatasetKind.Courses) {
                     for (const index in obj.contentParsed[key]) {
-                        tempPromisesContent.push(fs.promises.writeFile("./data/" + key + "/" + index + ".json", JSON.stringify(obj.contentParsed[key][index], null, "\t"), { recursive: true }));
+                        tempPromisesContent.push(fs.promises.writeFile("./data/" + key + "/" + index + ".json", JSON.stringify(obj.contentParsed[key][index], null, "\t"), "utf8"));
                     }
                 }
                 else {
-                    tempPromisesContent.push(fs.promises.writeFile("./data/" + key + "/" + key + ".json", JSON.stringify(obj.contentParsed[key], null, "\t"), { recursive: true }));
+                    tempPromisesContent.push(fs.promises.writeFile("./data/" + key + "/" + key + ".json", JSON.stringify(obj.contentParsed[key], null, "\t"), "utf8"));
                 }
             }
         })
@@ -111,24 +119,7 @@ class DiskOperationsHelper {
         });
         return tempPromisesContent;
     }
-    static executePromise(promise, obj, id) {
-        promise
-            .then((result) => {
-            for (const value of result) {
-                if (typeof value === "string") {
-                    obj.contentParsed[id].push(JSON.parse(value));
-                }
-                else {
-                    obj.contentParsed[id].push(JSON.parse(value.toString()));
-                }
-            }
-        })
-            .catch((e) => {
-            throw e;
-        });
-    }
     static checkIfDataInDisk(obj, id) {
-        let fs = require("fs");
         let dir = "./data/ids.json";
         let fileRaw;
         try {
@@ -138,7 +129,19 @@ class DiskOperationsHelper {
             return false;
         }
         let file = JSON.parse(fileRaw.toString());
-        return file.hasOwnProperty(id);
+        if (typeof file === "undefined") {
+            return false;
+        }
+        else {
+            return file.hasOwnProperty(id);
+        }
+    }
+    static cleanCache() {
+        let cacheDir = "./data/";
+        if (fs.existsSync(cacheDir)) {
+            fs.removeSync(cacheDir);
+        }
+        fs.mkdirSync(cacheDir);
     }
 }
 exports.default = DiskOperationsHelper;

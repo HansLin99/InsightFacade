@@ -60,7 +60,7 @@ export default class DatasetOperationJSON {
             })
             .then((files: string[]) => {
                 DatasetOperationJSON.parseJSON(obj, id, files);
-                DiskOperationsHelper.saveDatasetToDisk(obj).then(() => {
+                DiskOperationsHelper.saveDatasetToDisk(obj).then((results) => {
                     return resolve(Object.keys(obj.ids));
                 });
             })

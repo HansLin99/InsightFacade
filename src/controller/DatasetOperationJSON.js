@@ -37,7 +37,7 @@ class DatasetOperationJSON {
         })
             .then((files) => {
             DatasetOperationJSON.parseJSON(obj, id, files);
-            DiskOperationsHelper_1.default.saveDatasetToDisk(obj).then(() => {
+            DiskOperationsHelper_1.default.saveDatasetToDisk(obj).then((results) => {
                 return resolve(Object.keys(obj.ids));
             });
         })

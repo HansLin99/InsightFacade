@@ -161,8 +161,18 @@ export default class InsightFacade implements IInsightFacade {
                 );
             }
 
-            DiskOperationsHelper.saveDatasetToDisk(this);
-            return resolve(id);
+            DiskOperationsHelper.cleanCache();
+            DiskOperationsHelper.saveDatasetToDisk(this).then((results) => {
+                if (results === 1) {
+                    Log.trace("The dataset memory is empty. No disk write perfroms.");
+                    return resolve(id);
+                } else {
+                    Log.trace("The dataset requested has been removed. New copy has been written into disk.");
+                    return resolve(id);
+                }
+            }).catch((e) => {
+                return reject("Error when saving to disk" + e.message);
+            });
         });
     }
 

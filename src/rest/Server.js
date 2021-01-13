@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const restify = require("restify");
 const Util_1 = require("../Util");
+const InsightFacade_1 = require("../controller/InsightFacade");
+const IInsightFacade_1 = require("../controller/IInsightFacade");
 class Server {
     constructor(port) {
         Util_1.default.info("Server::<init>( " + port + " )");
@@ -32,6 +34,10 @@ class Server {
                     return next();
                 });
                 that.rest.get("/echo/:msg", Server.echo);
+                that.rest.put("/dataset/:id/:kind", Server.putDataset);
+                that.rest.del("/dataset/:id", Server.deleteDataset);
+                that.rest.post("/query", Server.postQuery);
+                that.rest.get("/datasets", Server.getDatasets);
                 that.rest.get("/.*", Server.getStatic);
                 that.rest.listen(that.port, function () {
                     Util_1.default.info("Server::start() - restify listening: " + that.rest.url);
@@ -87,6 +93,77 @@ class Server {
             return next();
         });
     }
+    static putDataset(req, res, next) {
+        try {
+            let id = req.params.id;
+            let kind = req.params.kind;
+            let content = req.body.toString("base64");
+            return Server.data.addDataset(id, content, kind).then((results) => {
+                res.json(200, { result: results });
+                return next();
+            }).catch((e) => {
+                res.json(400, { error: e.message });
+                return next();
+            });
+        }
+        catch (e) {
+            res.json(400, { error: e.message });
+            return next();
+        }
+    }
+    static deleteDataset(req, res, next) {
+        try {
+            let id = req.params.id;
+            return Server.data.removeDataset(id).then((results) => {
+                res.json(200, { result: results });
+                return next();
+            }).catch((e) => {
+                if (e instanceof IInsightFacade_1.InsightError) {
+                    res.json(400, { error: e.message });
+                }
+                else if (e instanceof IInsightFacade_1.NotFoundError) {
+                    res.json(404, { error: e.message });
+                }
+                return next();
+            });
+        }
+        catch (e) {
+            res.json(400, { error: e.message });
+            return next();
+        }
+    }
+    static postQuery(req, res, next) {
+        try {
+            let query = req.body;
+            if (typeof query === "string") {
+                query = JSON.parse(query);
+            }
+            return Server.data.performQuery(query).then((results) => {
+                res.json(200, { result: results });
+                return next();
+            }).catch((e) => {
+                res.json(400, { result: e.message });
+                return next();
+            });
+        }
+        catch (e) {
+            res.json(400, { error: e.message });
+            return next();
+        }
+    }
+    static getDatasets(req, res, next) {
+        try {
+            return Server.data.listDatasets().then((results) => {
+                res.json(200, { result: results });
+                return next();
+            });
+        }
+        catch (e) {
+            res.json(400, { error: e.message });
+            return next();
+        }
+    }
 }
 exports.default = Server;
+Server.data = new InsightFacade_1.default();
 //# sourceMappingURL=Server.js.map

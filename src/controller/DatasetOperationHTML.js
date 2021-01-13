@@ -6,62 +6,66 @@ const DiskOperationsHelper_1 = require("./DiskOperationsHelper");
 const parse5 = require("parse5");
 const Util_1 = require("../Util");
 const HTTPHelper_1 = require("./HTTPHelper");
+const HTMLHelper2_1 = require("./HTMLHelper2");
 class DatasetOperationHTML {
     static load(obj, id, content, resolve, reject) {
         this.allRoomsInfos = [];
         this.allBuildingNames = [];
         this.allBuildingInfos = [];
+        this.allRoomsLinks = [];
         let zip = new JSZip();
         zip.loadAsync(content, { base64: true })
             .then((zipFile) => {
             return this.loadRooms(zipFile, obj, id);
         })
             .then((zipFile) => {
-            return this.readAllBuildings(this.allBuildingNames, zipFile);
+            return this.readAllBuildings(this.allRoomsLinks, zipFile);
         })
             .then((files) => {
             this.parseHTML(obj, id, files);
-            DiskOperationsHelper_1.default.saveDatasetToDisk(obj).then(() => {
+            DiskOperationsHelper_1.default.saveDatasetToDisk(obj).then((results) => {
                 return resolve(Object.keys(obj.ids));
             });
         })
             .catch((error) => {
-            return reject(new IInsightFacade_1.InsightError(error));
+            return reject(new IInsightFacade_1.InsightError(error.message));
         });
     }
     static loadRooms(zipFile, obj, id) {
-        return new Promise((resolve, reject) => {
+        const that = this;
+        return new Promise(function (resolve, reject) {
             zipFile.file("rooms/index.htm").async("string").then((content) => {
                 let html = parse5.parse(content);
                 let buildingNames = [];
                 let tables = [];
-                this.getTable(html, tables);
-                this.recursiveGetAllBuildingsCode(tables[0], buildingNames);
-                this.allBuildingNames = buildingNames;
                 let buildingInfo = [];
-                this.recursiveGetAllBuildingInfo(tables[0], buildingInfo);
-                this.allBuildingInfos = buildingInfo;
-                HTTPHelper_1.default.getGeoLocation(this.allBuildingInfos).then((result) => {
-                    for (const index in this.allBuildingInfos) {
-                        let resultEle;
-                        try {
-                            resultEle = JSON.parse(result[index].pop());
-                        }
-                        catch (e) {
-                            this.allBuildingInfos.splice(parseInt(index, 10), 1);
-                            this.allBuildingNames.splice(parseInt(index, 10), 1);
-                            continue;
-                        }
-                        if (Object.keys(resultEle).includes("lat")
-                            && Object.keys(resultEle).includes("lon")) {
-                            this.allBuildingInfos[index].push(resultEle.lat);
-                            this.allBuildingInfos[index].push(resultEle.lon);
-                        }
-                        else {
-                            this.allBuildingInfos.splice(parseInt(index, 10), 1);
-                            this.allBuildingNames.splice(parseInt(index, 10), 1);
+                let links = [];
+                that.getNode(html, tables, "table", { name: "class", value: "views-table cols-5 table" });
+                if (tables.length <= 0) {
+                    throw new IInsightFacade_1.InsightError("No table find");
+                }
+                for (const table of tables) {
+                    try {
+                        that.recursiveGetAllBuildingsCode(table, buildingNames);
+                        if (buildingNames.length > 0) {
+                            that.recursiveGetAllBuildingInfo(table, buildingInfo);
+                            that.getLinks(table, links);
+                            break;
                         }
                     }
+                    catch (e) {
+                        Util_1.default.trace(e);
+                        continue;
+                    }
+                }
+                if (buildingNames.length <= 0) {
+                    throw new IInsightFacade_1.InsightError("No table find");
+                }
+                that.allRoomsLinks = [...new Set(links)];
+                that.allBuildingNames = buildingNames;
+                that.allBuildingInfos = buildingInfo;
+                HTTPHelper_1.default.getGeoLocation(that.allBuildingInfos).then((result) => {
+                    HTTPHelper_1.default.parseGeolocations(result);
                 }).then(() => {
                     return resolve(zipFile);
                 });
@@ -71,18 +75,32 @@ class DatasetOperationHTML {
             });
         });
     }
-    static getTable(inputNode, results) {
-        if (inputNode.tagName === "table") {
+    static getLinks(inputNode, results) {
+        if (inputNode.tagName === "a") {
             for (let atr of inputNode.attrs) {
-                if (atr.name === "class" &&
-                    atr.value === "views-table cols-5 table") {
+                if (atr.name === "href") {
+                    results.push(atr.value);
+                }
+            }
+        }
+        else if (Object.keys(inputNode).includes("childNodes")) {
+            for (let node of inputNode.childNodes) {
+                this.getLinks(node, results);
+            }
+        }
+    }
+    static getNode(inputNode, results, tag, attribute) {
+        if (inputNode.tagName === tag) {
+            for (let atr of inputNode.attrs) {
+                if (atr.name === attribute.name &&
+                    atr.value === attribute.value) {
                     results.push(inputNode);
                 }
             }
         }
         else if (Object.keys(inputNode).includes("childNodes")) {
             for (let node of inputNode.childNodes) {
-                this.getTable(node, results);
+                this.getNode(node, results, tag, attribute);
             }
         }
     }
@@ -136,8 +154,13 @@ class DatasetOperationHTML {
     }
     static constructDataset(obj, id) {
         obj.contentParsed[id] = [];
+        if (this.allRoomsInfos.length <= 0) {
+            throw new IInsightFacade_1.InsightError("No rooms.");
+        }
         for (const room of this.allRoomsInfos) {
-            obj.contentParsed[id].push(this.initRoomData(room));
+            if (room.length === 10) {
+                obj.contentParsed[id].push(this.initRoomData(room));
+            }
         }
     }
     static checkAttributes(node, cls, value) {
@@ -151,9 +174,9 @@ class DatasetOperationHTML {
     static readAllBuildings(buildings, zipFile) {
         let allContents = [];
         for (const building of buildings) {
+            let path = "rooms/" + building.split("./")[1];
             allContents.push(zipFile
-                .folder("rooms/campus/discover/buildings-and-classrooms/")
-                .file(building)
+                .file(path)
                 .async("string"));
         }
         return Promise.all(allContents);
@@ -163,14 +186,15 @@ class DatasetOperationHTML {
             let index = Allhtml.indexOf(html);
             let building = parse5.parse(html);
             let tables = [];
-            this.getTable(building, tables);
+            this.getNode(building, tables, "table", { name: "class", value: "views-table cols-5 table" });
             if (tables.length > 0) {
                 for (let table of tables) {
                     try {
-                        this.extractAllRoomsDetails(table, index);
+                        HTMLHelper2_1.default.extractAllRoomsDetails(table, index);
                     }
                     catch (e) {
                         Util_1.default.trace(e);
+                        continue;
                     }
                 }
             }
@@ -182,42 +206,6 @@ class DatasetOperationHTML {
         obj.ids[id] = { id: id, kind: IInsightFacade_1.InsightDatasetKind.Rooms, numRows: this.allRoomsInfos.length };
         return;
     }
-    static extractAllRoomsDetails(inputNode, index) {
-        if (inputNode.tagName === "tbody") {
-            if (Object.keys(inputNode).includes("childNodes")) {
-                for (let cn of inputNode.childNodes) {
-                    if (cn.tagName === "tr" && Object.keys(cn).includes("childNodes")) {
-                        let template = [...this.allBuildingInfos[index]];
-                        for (let cnn of cn.childNodes) {
-                            if (cnn.tagName === "td" && Object.keys(cnn).includes("childNodes")) {
-                                if (this.checkAttributes(cnn, "class", "views-field views-field-field-room-number")) {
-                                    template.push(cnn.childNodes[1].childNodes[0].value.trim());
-                                }
-                                else if (this.checkAttributes(cnn, "class", "views-field views-field-field-room-capacity")) {
-                                    template.push(parseInt(cnn.childNodes[0].value.trim(), 10));
-                                }
-                                else if (this.checkAttributes(cnn, "class", "views-field views-field-field-room-furniture")) {
-                                    template.push(cnn.childNodes[0].value.trim());
-                                }
-                                else if (this.checkAttributes(cnn, "class", "views-field views-field-field-room-type")) {
-                                    template.push(cnn.childNodes[0].value.trim());
-                                }
-                                else if (this.checkAttributes(cnn, "class", "views-field views-field-nothing")) {
-                                    template.push(cnn.childNodes[1].attrs[0].value.trim());
-                                }
-                            }
-                        }
-                        this.allRoomsInfos.push(template);
-                    }
-                }
-            }
-        }
-        else if (Object.keys(inputNode).includes("childNodes")) {
-            for (let node of inputNode.childNodes) {
-                this.extractAllRoomsDetails(node, index);
-            }
-        }
-    }
     static initRoomData(info) {
         return { rooms_fullname: info[1], rooms_shortname: info[0], rooms_number: info[5],
             rooms_name: info[0] + "_" + info[5], rooms_address: info[2], rooms_lat: info[3],
@@ -227,7 +215,4 @@ class DatasetOperationHTML {
     }
 }
 exports.default = DatasetOperationHTML;
-DatasetOperationHTML.allBuildingNames = [];
-DatasetOperationHTML.allBuildingInfos = [];
-DatasetOperationHTML.allRoomsInfos = [];
 //# sourceMappingURL=DatasetOperationHTML.js.map

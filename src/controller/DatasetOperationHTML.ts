@@ -9,6 +9,7 @@ import DiskOperationsHelper from "./DiskOperationsHelper";
 import * as parse5 from "parse5";
 import Util from "../Util";
 import HTTPHelper, { Geolocation } from "./HTTPHelper";
+import HTMLHelper2 from "./HTMLHelper2";
 
 export interface RoomData extends Object {
     rooms_fullname: string; rooms_shortname: string; rooms_number: string; rooms_name: string; rooms_address: string;
@@ -17,9 +18,10 @@ export interface RoomData extends Object {
 }
 
 export default class DatasetOperationHTML {
-    public static allBuildingNames: string[] = [];
-    public static allBuildingInfos: any[][] = [];
-    private static allRoomsInfos: any[][] = [];
+    public static allBuildingNames: string[];
+    public static allBuildingInfos: any[][];
+    public static allRoomsInfos: any[][];
+    public static allRoomsLinks: string[];
 
     public static load(
         obj: InsightFacade,
@@ -31,59 +33,61 @@ export default class DatasetOperationHTML {
         this.allRoomsInfos = [];
         this.allBuildingNames = [];
         this.allBuildingInfos = [];
+        this.allRoomsLinks = [];
         let zip: JSZip = new JSZip();
         zip.loadAsync(content, { base64: true })
             .then((zipFile: JSZip) => {
                 return this.loadRooms(zipFile, obj, id);
             })
             .then((zipFile: JSZip) => {
-                return this.readAllBuildings(this.allBuildingNames, zipFile);
+                return this.readAllBuildings(this.allRoomsLinks, zipFile);
             })
             .then((files: string[]) => {
                 this.parseHTML(obj, id, files);
-                DiskOperationsHelper.saveDatasetToDisk(obj).then(() => {
+                DiskOperationsHelper.saveDatasetToDisk(obj).then((results) => {
                     return resolve(Object.keys(obj.ids));
                 });
                 // return resolve(Object.keys(obj.ids));
             })
             .catch((error) => {
-                return reject(new InsightError(error));
+                return reject(new InsightError(error.message));
             });
     }
 
     public static loadRooms(zipFile: JSZip, obj: InsightFacade, id: string): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
+        const that = this;
+        return new Promise<any>(function (resolve, reject) {
             zipFile.file("rooms/index.htm").async("string").then((content) => {
                 let html: any = parse5.parse(content);
                 let buildingNames: string[] = [];
                 let tables: string[] = [];
-                this.getTable(html, tables);
-                // TODO: Table[0] here might be some problems
-                this.recursiveGetAllBuildingsCode(tables[0], buildingNames);
-                this.allBuildingNames = buildingNames;
                 let buildingInfo: string[][] = [];
-                this.recursiveGetAllBuildingInfo(tables[0], buildingInfo);
-                this.allBuildingInfos = buildingInfo;
-                HTTPHelper.getGeoLocation(this.allBuildingInfos).then((result: string[][]) => {
-                    for (const index in this.allBuildingInfos) {
-                        let resultEle: Geolocation;
-                        try {
-                            resultEle = JSON.parse(result[index].pop());
-                        } catch (e) {
-                            this.allBuildingInfos.splice(parseInt(index, 10), 1);
-                            this.allBuildingNames.splice(parseInt(index, 10), 1);
-                            continue;
+                let links: string[] = [];
+                that.getNode(html, tables, "table", {name: "class", value: "views-table cols-5 table"});
+                if (tables.length <= 0) {
+                    throw new InsightError("No table find");
+                }
+                for (const table of tables) {
+                    try {
+                        that.recursiveGetAllBuildingsCode(table, buildingNames);
+                        if (buildingNames.length > 0) {
+                            that.recursiveGetAllBuildingInfo(table, buildingInfo);
+                            that.getLinks(table, links);
+                            break;
                         }
-                        if (Object.keys(resultEle).includes("lat")
-                            && Object.keys(resultEle).includes("lon")) {
-                            this.allBuildingInfos[index].push(resultEle.lat);
-                            this.allBuildingInfos[index].push(resultEle.lon);
-                        } else {
-                            this.allBuildingInfos.splice(parseInt(index, 10), 1);
-                            this.allBuildingNames.splice(parseInt(index, 10), 1);
-                        }
+                    } catch (e) {
+                        Util.trace(e);
+                        continue;
                     }
-                    // return resolve(zipFile);
+                }
+                if (buildingNames.length <= 0) {
+                    throw new InsightError("No table find");
+                }
+                that.allRoomsLinks = [...new Set(links)];
+                that.allBuildingNames = buildingNames;
+                that.allBuildingInfos = buildingInfo;
+                HTTPHelper.getGeoLocation(that.allBuildingInfos).then((result: string[][]) => {
+                    HTTPHelper.parseGeolocations(result);
                 }).then(() => {
                     return resolve(zipFile);
                 });
@@ -94,19 +98,35 @@ export default class DatasetOperationHTML {
         });
     }
 
-    private static getTable(inputNode: any, results: string[]) {
-        if (inputNode.tagName === "table") {
+    private static getLinks(inputNode: any, results: string[]) {
+        if (inputNode.tagName === "a") {
             for (let atr of inputNode.attrs) {
                 if (
-                    atr.name === "class" &&
-                    atr.value === "views-table cols-5 table"
+                    atr.name === "href"
+                ) {
+                    results.push(atr.value);
+                }
+            }
+        } else if (Object.keys(inputNode).includes("childNodes")) {
+            for (let node of inputNode.childNodes) {
+                this.getLinks(node, results);
+            }
+        }
+    }
+
+    private static getNode(inputNode: any, results: string[], tag: string, attribute: any) {
+        if (inputNode.tagName === tag) {
+            for (let atr of inputNode.attrs) {
+                if (
+                    atr.name === attribute.name &&
+                    atr.value === attribute.value
                 ) {
                     results.push(inputNode);
                 }
             }
         } else if (Object.keys(inputNode).includes("childNodes")) {
             for (let node of inputNode.childNodes) {
-                this.getTable(node, results);
+                this.getNode(node, results, tag, attribute);
             }
         }
     }
@@ -170,14 +190,17 @@ export default class DatasetOperationHTML {
 
     private static constructDataset(obj: InsightFacade, id: string) {
         obj.contentParsed[id] = [];
-        // Util.trace(this.allRoomsInfos.length);
-        for (const room of this.allRoomsInfos) {
-            obj.contentParsed[id].push(this.initRoomData(room));
+        if (this.allRoomsInfos.length <= 0) {
+            throw new InsightError("No rooms.");
         }
-        // Util.trace(obj.contentParsed[id].length);
+        for (const room of this.allRoomsInfos) {
+            if (room.length === 10) {
+                obj.contentParsed[id].push(this.initRoomData(room));
+            }
+        }
     }
 
-    private static checkAttributes(
+    public static checkAttributes(
         node: any,
         cls: string,
         value: string,
@@ -197,10 +220,10 @@ export default class DatasetOperationHTML {
     ): any {
         let allContents: Array<Promise<string>> = [];
         for (const building of buildings) {
+            let path = "rooms/" + building.split("./")[1];
             allContents.push(
                 zipFile
-                    .folder("rooms/campus/discover/buildings-and-classrooms/")
-                    .file(building)
+                    .file(path)
                     .async("string"),
             );
         }
@@ -212,60 +235,24 @@ export default class DatasetOperationHTML {
             let index: number = Allhtml.indexOf(html);
             let building: any = parse5.parse(html);
             let tables: any = [];
-            this.getTable(building, tables);
+            this.getNode(building, tables, "table", {name: "class", value: "views-table cols-5 table"});
             if (tables.length > 0) {
                 for (let table of tables) {
                     try {
-                        this.extractAllRoomsDetails(table, index);
+                        HTMLHelper2.extractAllRoomsDetails(table, index);
                     } catch (e) {
                         Util.trace(e);
+                        continue;
                     }
                 }
             }
         }
         this.constructDataset(obj, id);
         if (this.allRoomsInfos.length <= 0) {
-            throw new InsightError("No rooms");
+            throw new InsightError( "No rooms");
         }
         obj.ids[id] = {id: id, kind: InsightDatasetKind.Rooms, numRows: this.allRoomsInfos.length} as InsightDataset;
         return;
-    }
-
-    public static extractAllRoomsDetails(inputNode: any, index: number) {
-        if (inputNode.tagName === "tbody") {
-            if (Object.keys(inputNode).includes("childNodes")) {
-                for (let cn of inputNode.childNodes) {
-                    if (cn.tagName === "tr" && Object.keys(cn).includes("childNodes")) {
-                        let template: any[] = [...this.allBuildingInfos[index]];
-                        for (let cnn of cn.childNodes) {
-                            if (cnn.tagName === "td" && Object.keys(cnn).includes("childNodes")) {
-                                if (this.checkAttributes(cnn, "class",
-                                        "views-field views-field-field-room-number")) {
-                                    template.push(cnn.childNodes[1].childNodes[0].value.trim());
-                                } else if (this.checkAttributes(cnn, "class",
-                                        "views-field views-field-field-room-capacity")) {
-                                    template.push(parseInt(cnn.childNodes[0].value.trim(), 10));
-                                } else if (this.checkAttributes(cnn, "class",
-                                        "views-field views-field-field-room-furniture")) {
-                                    template.push(cnn.childNodes[0].value.trim());
-                                } else if (this.checkAttributes(cnn, "class",
-                                        "views-field views-field-field-room-type")) {
-                                    template.push(cnn.childNodes[0].value.trim());
-                                } else if (this.checkAttributes(cnn, "class",
-                                        "views-field views-field-nothing")) {
-                                    template.push(cnn.childNodes[1].attrs[0].value.trim());
-                                }
-                            }
-                        }
-                        this.allRoomsInfos.push(template);
-                    }
-                }
-            }
-        } else if (Object.keys(inputNode).includes("childNodes")) {
-            for (let node of inputNode.childNodes) {
-                this.extractAllRoomsDetails(node, index);
-            }
-        }
     }
 
     /**
